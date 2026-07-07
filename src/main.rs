@@ -5,6 +5,7 @@ mod models;
 mod routes;
 mod auth;
 mod error;
+mod repository;
 
 #[tokio::main]
 async fn main() -> color_eyre::Result<()> {
