@@ -24,11 +24,14 @@ pub enum AppError {
 
     #[error(transparent)]
     Template(#[from] askama::Error),
+
+    #[error(transparent)]
+    Session(#[from] tower_sessions::session::Error),
 }
 
 #[derive(Serialize)]
 pub struct ErrorResponse {
-    error: String,
+    error: String, // fazer match aqui
 }
 
 impl IntoResponse for AppError {
@@ -41,7 +44,7 @@ impl IntoResponse for AppError {
             Self::UsernameTaken | Self::MissingAuthorization => StatusCode::BAD_REQUEST,
             Self::InvalidCredentials => StatusCode::UNAUTHORIZED,
             Self::AssetDoesNotExist | Self::UserDoesNotExist => StatusCode::NOT_FOUND,
-            Self::Database(_) | Self::Template(_) => {
+            Self::Database(_) | Self::Template(_) | Self::Session(_) => {
                 StatusCode::INTERNAL_SERVER_ERROR
             }
         };

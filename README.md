@@ -39,6 +39,7 @@ A API ficará disponível em `http://localhost:3000`.
 - [Docs/1-primeiros_passos_com_exum.md](Docs/1-primeiros_passos_com_exum.md): documentação do primeiro passo, com aprendizados, dependências, fluxo e estrutura.
 - [Docs/2-persistencia_com_sqlx_e_postgresql.md](Docs/2-persistencia_com_sqlx_e_postgresql.md): documentação detalhada da implementação com SQLx, PostgreSQL e migrações.
 - [Docs/3-modelagem_de_usuario_e_autenticacao.md](Docs/3-modelagem_de_usuario_e_autenticacao.md): documentação da modelagem de usuário e do fluxo de autenticação.
+- [Docs/4-implementando_cookies_e_jwt_em_rust.md](Docs/4-implementando_cookies_e_jwt_em_rust.md): documentação da implementação de cookies e sessão em Rust.
 
 ## Dicas de banco de dados
 Para entrar no PostgreSQL via Docker, use:

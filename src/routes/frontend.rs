@@ -1,20 +1,18 @@
-use std::fmt::format;
-
 use askama::Template;
 use axum::{
-    Router, extract::Form, response::{Html, IntoResponse, Redirect}, routing::{get},
+    Router, extract::Form, response::{Html, IntoResponse, Redirect, Response}, routing::get,
 };
-use axum_extra::extract::{CookieJar, cookie::Cookie};
 use serde::Deserialize;
+use tower_sessions::Session;
 
 use crate::{
-    app::AppState, auth::user::{UnauthenticatedUser, User}, error::AppError, repository::Repository,
+    app::AppState, auth::user::{UnauthenticatedUser, User, UserSession}, error::AppError, repository::Repository,
 };
 
 pub fn router() -> Router<AppState> {
     Router::new()
-    .route("/", get(index))
-    .route("/login", get(login_page).post(login))
+        .route("/", get(index))
+        .route("/login", get(login_page).post(login))
 }
 
 #[derive(Template)]
@@ -34,24 +32,36 @@ struct LoginForm {
 
 async fn login(
     repository: Repository,
-    jar: CookieJar,
+    session: Session,
     Form(request): Form<LoginForm>,
 ) -> Result<impl IntoResponse, AppError> {
-    let unauth_user = UnauthenticatedUser::new(request.username, request.password);
+    let unauth_user =
+        UnauthenticatedUser::new(request.username, request.password);
 
     let user = match unauth_user.authenticate(&repository).await {
         Ok(user) => user,
-        Err(AppError::UserDoesNotExist) => unauth_user.register(&repository).await?,
+        Err(AppError::UserDoesNotExist) => {
+            unauth_user.register(&repository).await?
+        }
         Err(other_err) => return Err(other_err),
     };
 
-    let cookie = Cookie::build(("token", user.id().to_string()))
-        .http_only(true);
+    session
+        .insert(
+            "user",
+            UserSession {
+                id: user.id(),
+                username: user.username().clone(),
+            },
+        )
+        .await?;
 
-
-    Ok((jar.add(cookie),Redirect::to("/")))
+    Ok(Redirect::to("/"))
 }
 
-async fn index(user: User) -> Result<Html<String>, AppError> {
-    Ok(Html(format!("Hello, {}", user.username())))
+async fn index(maybe_user: Option<User>) -> Result<Response, AppError> {
+    match maybe_user {
+        Some(user) => Ok(Html(format!("Hello, {}", user.username())).into_response()),
+        None => Ok(Redirect::to("/login").into_response()),
+    }
 }

@@ -2,6 +2,8 @@ use axum::Router;
 use color_eyre::eyre::Ok;
 use sqlx::PgPool;
 use tokio::net::TcpListener;
+use tower_sessions::cookie::time::Duration;
+use tower_sessions::{Expiry, MemoryStore, SessionManagerLayer};
 use tracing::info;
 use tracing_subscriber::{
     Layer, fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt,
@@ -34,12 +36,16 @@ impl App {
 
         dotenvy::dotenv()?;
         let state = AppState::new().await?;
+        let session_store = MemoryStore::default();
+        let session_layer = SessionManagerLayer::new(session_store)
+            .with_expiry(Expiry::OnInactivity(Duration::minutes(10)));
 
         let listener = TcpListener::bind("0.0.0.0:3000").await?;
         let router = Router::new()
-        .nest("/api", router())
-        .merge(routes::frontend::router())
-        .with_state(state);
+            .nest("/api", router())
+            .merge(routes::frontend::router())
+            .layer(session_layer)
+            .with_state(state);
 
         info!("Starting server on 0.0.0.0:3000");
 
