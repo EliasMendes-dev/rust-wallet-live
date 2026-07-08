@@ -7,7 +7,7 @@ use tracing_subscriber::{
     Layer, fmt::format::FmtSpan, layer::SubscriberExt, util::SubscriberInitExt,
 };
 
-use crate::routes::api::router;
+use crate::routes::{self, api::router};
 
 #[derive(Clone)]
 pub struct AppState {
@@ -36,7 +36,10 @@ impl App {
         let state = AppState::new().await?;
 
         let listener = TcpListener::bind("0.0.0.0:3000").await?;
-        let router = Router::new().nest("/api", router()).with_state(state);
+        let router = Router::new()
+        .nest("/api", router())
+        .merge(routes::frontend::router())
+        .with_state(state);
 
         info!("Starting server on 0.0.0.0:3000");
 

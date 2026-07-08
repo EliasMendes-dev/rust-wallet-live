@@ -3,7 +3,6 @@ use axum::{
     http::{header::AUTHORIZATION},
 };
 
-
 use crate::{app::AppState, error::AppError};
 
 const ADMIN_SECRET_KEY: &str = "im-the-admin";

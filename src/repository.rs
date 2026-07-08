@@ -3,7 +3,10 @@ use std::convert::Infallible;
 use axum::extract::FromRequestParts;
 use sqlx::PgPool;
 
-use crate::{app::AppState, models::Asset};
+use crate::{
+    app::AppState,
+    models::{Asset, UserRecord},
+};
 
 pub struct Repository {
     db: PgPool,
@@ -20,12 +23,16 @@ impl Repository {
         .await
     }
 
-    pub async fn create_asset(&self, name: String, unit_value: f64) -> sqlx::Result<Asset> {
+    pub async fn create_asset(
+        &self,
+        name: String,
+        unit_value: f64,
+    ) -> sqlx::Result<Asset> {
         sqlx::query_as!(
             Asset,
             "INSERT INTO assets (name, unit_value)
             VALUES ($1, $2)
-            RETURNING id, name, unit_value",
+            RETURNING id, name, unit_value;",
             name,
             unit_value
         )
@@ -33,16 +40,54 @@ impl Repository {
         .await
     }
 
-    pub async fn update_asset(&self, id: i64, name: Option<String>, unit_value: Option<f64>,
+    pub async fn update_asset(
+        &self,
+        id: i64,
+        name: Option<String>,
+        unit_value: Option<f64>,
     ) -> sqlx::Result<Option<Asset>> {
         sqlx::query_as!(
             Asset,
             "UPDATE assets
-        SET name = COALESCE($2, name),
-            unit_value = COALESCE($3, unit_value)
-        WHERE id = $1
-        RETURNING id, name, unit_value
-        ", id, name, unit_value
+            SET name = COALESCE($2, name),
+                unit_value = COALESCE($3, unit_value)
+            WHERE id = $1
+            RETURNING id, name, unit_value;",
+            id,
+            name,
+            unit_value
+        )
+        .fetch_optional(&self.db)
+        .await
+    }
+
+    pub async fn add_user(
+        &self,
+        username: &str,
+        password_hash: &str,
+    ) -> sqlx::Result<UserRecord> {
+        sqlx::query_as!(
+            UserRecord,
+            "INSERT INTO users (username, password_hash)
+            VALUES ($1, $2)
+            RETURNING id, username, password_hash;",
+            username,
+            password_hash
+        )
+        .fetch_one(&self.db)
+        .await
+    }
+
+    pub async fn get_user_by_name(
+        &self,
+        username: &str,
+    ) -> sqlx::Result<Option<UserRecord>> {
+        sqlx::query_as!(
+            UserRecord,
+            "SELECT id, username, password_hash
+            FROM users
+            WHERE username = $1;",
+            username
         )
         .fetch_optional(&self.db)
         .await
@@ -64,7 +109,7 @@ impl FromRequestParts<AppState> for Repository {
 
 #[cfg(test)]
 impl From<PgPool> for Repository {
-    fn from(db:PgPool) -> Self {
+    fn from(db: PgPool) -> Self {
         Self { db }
     }
 }

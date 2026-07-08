@@ -1,17 +1,29 @@
-use axum::{Json, http::StatusCode, response::IntoResponse};
+use axum::{http::StatusCode, response::IntoResponse, Json};
 use serde::Serialize;
 use thiserror::Error;
 
 #[derive(Debug, Error)]
 pub enum AppError {
-    #[error("Missing Authorization Headers")]
+    #[error("Missing Authorization Header")]
     MissingAuthorization,
+
     #[error("Invalid Credentials")]
     InvalidCredentials,
+
     #[error("Asset Does Not Exist")]
     AssetDoesNotExist,
+
+    #[error("User Does Not Exist")]
+    UserDoesNotExist,
+
+    #[error("This username is already registered")]
+    UsernameTaken,
+
     #[error(transparent)]
-    Database(#[from] sqlx::Error)
+    Database(#[from] sqlx::Error),
+
+    #[error(transparent)]
+    Template(#[from] askama::Error),
 }
 
 #[derive(Serialize)]
@@ -26,10 +38,12 @@ impl IntoResponse for AppError {
         };
 
         let status = match self {
-            Self::MissingAuthorization => StatusCode::BAD_REQUEST,
+            Self::UsernameTaken | Self::MissingAuthorization => StatusCode::BAD_REQUEST,
             Self::InvalidCredentials => StatusCode::UNAUTHORIZED,
-            Self::AssetDoesNotExist => StatusCode::NOT_FOUND,
-            Self::Database(_) => StatusCode::INTERNAL_SERVER_ERROR,
+            Self::AssetDoesNotExist | Self::UserDoesNotExist => StatusCode::NOT_FOUND,
+            Self::Database(_) | Self::Template(_) => {
+                StatusCode::INTERNAL_SERVER_ERROR
+            }
         };
 
         (status, Json(error_response)).into_response()
