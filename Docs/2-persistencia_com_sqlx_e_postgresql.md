@@ -55,7 +55,13 @@ O repositório encapsula as operações de persistência:
 As handlers das rotas chamam o repositório para executar as operações no banco. Isso faz a API trabalhar com dados reais, em vez de dados temporários em memória.
 
 ## Migrações
-As migrações foram usadas para criar a estrutura inicial do banco. Com SQLx, a aplicação pode rodar as migrações com o comando:
+As migrações foram usadas para criar a estrutura inicial do banco. Com SQLx, a aplicação pode criar uma nova migração com o comando:
+
+```bash
+cargo sqlx migrate add nome_da_migration
+```
+
+Depois de definir os arquivos de migração, basta aplicar tudo com:
 
 ```bash
 cargo sqlx migrate run
@@ -101,8 +107,4 @@ Até esta etapa, o projeto consolidou:
 - organização em camadas com repositório;
 - uso de migrações e testes com banco.
 
-## Próximos passos sugeridos
-- adicionar autenticação mais robusta;
-- criar endpoints de remoção de ativos;
-- separar melhor o modelo de domínio da camada de banco;
-- adicionar docker-compose para subir o banco junto com a aplicação.
+

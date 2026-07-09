@@ -11,4 +11,3 @@ mod repository;
 async fn main() -> color_eyre::Result<()> {
     App::start().await
 }
-

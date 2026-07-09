@@ -82,9 +82,3 @@ Antes desse passo, o projeto apenas validava um header de admin fixo. Agora ele 
 ## Observações
 O registro é implícito: ao fazer login com um usuário que ainda não existe, o sistema cria o usuário automaticamente.
 
-## Próximos passos sugeridos
-- adicionar logout e sessões;
-- usar tokens JWT ou cookies seguros;
-- melhorar a interface de login;
-- criar autorização por papéis (roles) e permissões;
-- fazer testes específicos para autenticação.

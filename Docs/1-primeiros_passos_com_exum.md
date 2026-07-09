@@ -84,8 +84,4 @@ Até esta etapa, os principais aprendizados foram:
 - como trabalhar com estado compartilhado em aplicações assíncronas;
 - como criar um fluxo básico de autenticação em uma API.
 
-## Próximos passos sugeridos
-- adicionar testes;
-- persistir os ativos em banco ou arquivo;
-- criar novos endpoints;
-- melhorar a organização do código e a documentação.
+

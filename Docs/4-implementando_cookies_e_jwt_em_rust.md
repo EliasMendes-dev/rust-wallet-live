@@ -89,9 +89,3 @@ Antes dessa etapa, o projeto já tinha modelagem de usuário e autenticação b�
 
 Agora, o login mantém o estado do usuário entre requisições e permite proteger páginas com sessão.
 
-## Próximos passos sugeridos
-
-- migrar de `MemoryStore` para uma store persistente (Redis, banco ou arquivo);
-- implementar JWT para autenticação stateless;
-- adicionar logout e expiração explícita de sessão;
-- proteger rotas de API com autorização por papel.

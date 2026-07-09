@@ -103,7 +103,6 @@ impl FromRequestParts<AppState> for User {
         parts: &mut axum::http::request::Parts,
         _state: &AppState,
     ) -> Result<Self, Self::Rejection> {
-
         let session = Session::from_request_parts(parts, _state)
             .await
             .map_err(|_| AppError::MissingAuthorization)?;

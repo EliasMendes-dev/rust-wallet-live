@@ -1,9 +1,12 @@
 ---
 source: src/routes/api.rs
-expression: new_asset
+assertion_line: 92
+expression: assets
 ---
-{
-  "id": 1,
-  "name": "Bitcoin",
-  "unit_value": 10.0
-}
+[
+  {
+    "id": 1,
+    "name": "Bitcoin",
+    "unit_value": 10.0
+  }
+]
