@@ -1,4 +1,5 @@
 use axum::{Json, Router, routing::get};
+use rust_decimal::Decimal;
 use serde::Deserialize;
 
 use crate::{
@@ -21,7 +22,7 @@ async fn list_assets(repository: Repository) -> Result<Json<Vec<Asset>>, AppErro
 #[derive(Deserialize)]
 struct CreateAssetRequest {
     name: String,
-    unit_value: f64,
+    unit_value: Decimal,
 }
 
 #[tracing::instrument(skip_all)]
@@ -41,7 +42,7 @@ async fn create_asset(
 struct UpdateAssetRequest {
     id: i64,
     name: Option<String>,
-    unit_value: Option<f64>,
+    unit_value: Option<Decimal>,
 }
 
 #[tracing::instrument(skip_all)]
@@ -61,6 +62,7 @@ async fn update_asset(
 
 #[cfg(test)]
 mod tests {
+    use rust_decimal::Decimal;
     use sqlx::PgPool;
 
     use super::*;
@@ -68,45 +70,48 @@ mod tests {
     #[sqlx::test]
     async fn test_create_assets(db: PgPool) {
         let request = CreateAssetRequest {
-            name: "Bitcoin".to_string(),
-            unit_value: 10.0,
+            name: "Dogecoin".to_string(),
+            unit_value: Decimal::new(100, 1),
         };
         let Json(new_asset) = create_asset(Admin, db.into(), Json(request))
             .await
             .expect("sucess");
 
-        assert_eq!(new_asset.id, 1);
-        assert_eq!(new_asset.name, "Bitcoin".to_string());
-        assert_eq!(new_asset.unit_value, 10.0);
+        assert_eq!(new_asset.id, 11);
+        assert_eq!(new_asset.name, "Dogecoin".to_string());
+        assert_eq!(new_asset.unit_value, Decimal::new(100, 1));
 
-        insta::assert_json_snapshot!(new_asset);
+        let serialized = serde_json::to_string_pretty(&new_asset).expect("serialize");
+        insta::assert_snapshot!(serialized);
     }
 
-    #[sqlx::test(fixtures("bitcoin_asset"))]
+    #[sqlx::test]
     async fn test_list_assets(db: PgPool) {
-    let Json(assets) = list_assets(db.into()).await.expect("sucess");
+        let Json(assets) = list_assets(db.into()).await.expect("sucess");
 
-    assert_eq!(assets.len(), 1);
-    assert_eq!(assets[0].name, "Bitcoin");
+        assert_eq!(assets.len(), 10);
+        assert!(assets.iter().any(|asset| asset.name == "Bitcoin"));
 
-    insta::assert_json_snapshot!(assets)
+        let serialized = serde_json::to_string_pretty(&assets).expect("serialize");
+        insta::assert_snapshot!(serialized);
     }
 
-    #[sqlx::test(fixtures("bitcoin_asset"))]
+    #[sqlx::test]
     async fn test_update_assets(db: PgPool) {
         let request = UpdateAssetRequest {
             id: 1,
-            name: Some("Ethereum".to_string()),
-            unit_value: Some(20.0),
+            name: Some("Avalanche".to_string()),
+            unit_value: Some(Decimal::new(200, 1)),
         };
         let Json(update_asset) = update_asset(Admin, db.into(), Json(request))
             .await
             .expect("sucess");
 
         assert_eq!(update_asset.id, 1);
-        assert_eq!(update_asset.name, "Ethereum".to_string());
-        assert_eq!(update_asset.unit_value, 20.0);
+        assert_eq!(update_asset.name, "Avalanche".to_string());
+        assert_eq!(update_asset.unit_value, Decimal::new(200, 1));
 
-        insta::assert_json_snapshot!(update_asset);
+        let serialized = serde_json::to_string_pretty(&update_asset).expect("serialize");
+        insta::assert_snapshot!(serialized);
     }
 }

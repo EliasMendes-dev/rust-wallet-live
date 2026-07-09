@@ -1,7 +1,4 @@
-use axum::{
-    extract::FromRequestParts,
-    http::{header::AUTHORIZATION},
-};
+use axum::{extract::FromRequestParts, http::header::AUTHORIZATION};
 
 use crate::{app::AppState, error::AppError};
 

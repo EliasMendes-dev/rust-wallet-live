@@ -1,52 +1,70 @@
 # Rust Wallet Live
 
-Este projeto é uma API em Rust construída com Axum para aprender os fundamentos de backend, rotas HTTP, autenticação simples, tratamento de erros, uso de enums e persistência com PostgreSQL.
-
 ## O que o projeto faz
-A aplicação controla ativos financeiros por meio de uma API REST simples com os seguintes endpoints:
 
-- `GET /api/assets`: lista os ativos cadastrados.
-- `POST /api/assets`: cria um novo ativo.
-- `PATCH /api/assets`: atualiza um ativo existente.
+Este projeto é uma aplicação de carteira financeira simples construída em Rust. Ele permite que o usuário se registre, faça login e visualize ativos disponíveis e ativos próprios. A autenticação é baseada em sessão no servidor, e os dados transacionais usam `decimal` para preservar precisão financeira.
 
-## Arquitetura básica
-O projeto está organizado em módulos para separar responsabilidades:
+## Como executar a aplicação
 
-- `src/main.rs`: ponto de entrada.
-- `src/app.rs`: configuração do servidor e conexão com o banco.
-- `src/routes/api.rs`: definição das rotas e handlers.
-- `src/models.rs`: estrutura do modelo `Asset`.
-- `src/repository.rs`: camada de acesso a dados com SQLx.
-- `src/auth/`: autenticação simples.
-- `src/error.rs`: tratamento centralizado de erros.
+1. Crie um arquivo `.env` com a variável `DATABASE_URL` apontando para o banco PostgreSQL:
 
-## Persistência
-A partir desta etapa, os ativos são salvos em um banco PostgreSQL com SQLx, usando um pool de conexões e migrações.
+```env
+DATABASE_URL=postgres://usuario:senha@localhost/nome_do_banco
+```
 
-## Como executar
-No terminal, na raiz do projeto, rode:
+2. Execute as migrations:
 
 ```bash
 cargo sqlx migrate run
+```
+
+3. Inicie a aplicação:
+
+```bash
 cargo run
 ```
 
-Antes disso, certifique-se de ter o PostgreSQL rodando e de definir a variável `DATABASE_URL` no ambiente ou em um arquivo `.env`.
+A aplicação será iniciada em `http://0.0.0.0:3000`.
 
-A API ficará disponível em `http://localhost:3000`.
+## Quais tecnologias foram usadas
 
-## Documentação
-- [Docs/1-primeiros_passos_com_exum.md](Docs/1-primeiros_passos_com_exum.md): documentação do primeiro passo, com aprendizados, dependências, fluxo e estrutura.
-- [Docs/2-persistencia_com_sqlx_e_postgresql.md](Docs/2-persistencia_com_sqlx_e_postgresql.md): documentação detalhada da implementação com SQLx, PostgreSQL e migrações.
-- [Docs/3-modelagem_de_usuario_e_autenticacao.md](Docs/3-modelagem_de_usuario_e_autenticacao.md): documentação da modelagem de usuário e do fluxo de autenticação.
-- [Docs/4-implementando_cookies_e_jwt_em_rust.md](Docs/4-implementando_cookies_e_jwt_em_rust.md): documentação da implementação de cookies e sessão em Rust.
-- [Docs/5-dashboards_e_templates_com_askama.md](Docs/5-dashboards_e_templates_com_askama.md): documentação do dashboard e dos templates Askama.
+- Rust
+- Axum (web framework)
+- Askama (templates HTML)
+- SQLx (acesso a banco de dados Postgres)
+- tower-sessions (sessões em memória)
+- rust_decimal (valores financeiros precisos)
+- password_auth (hash de senhas)
+- dotenvy (carregamento de variáveis de ambiente)
+- tracing (logs)
 
-## Dicas de banco de dados
-Para entrar no PostgreSQL via Docker, use:
+## Qual melhoria você implementou
+
+- Adição de tela de cadastro com `username`, `email` e `password`.
+- Login com validação de `email` e `password`.
+- Tratamento de erro inline nas páginas de login e registro, exibindo mensagens como `Invalid Credentials` e `The provided email is not valid`.
+- Validação de email no backend e remoção de mensagens de erro internas do usuário.
+- Uso de `tower-sessions` em vez de JWT por limitações de dependências no ambiente local.
+- Migração de valores financeiros de `double` para `decimal` para evitar perda de precisão.
+
+## Como testar sua versão
+
+Execute a suíte de testes do Rust:
 
 ```bash
-docker exec -it rust-wallet-live-db-1 psql -U postgres -d postgres
+cargo test
 ```
 
-Mantenha a variável `DATABASE_URL` definida no `.env` ou no ambiente para o app conectar corretamente.
+Caso seja necessário reexecutar as migrations em um banco limpo:
+
+```bash
+cargo sqlx migrate revert
+cargo sqlx migrate run
+```
+
+## O que você aprendeu durante o desafio
+
+- Como implementar autenticação baseada em sessão com `tower-sessions` em Rust.
+- Por que `decimal` é mais adequado para valores financeiros do que `double` em bancos e em aplicação.
+- Como renderizar formulários com erros inline usando Askama.
+- Como limitar mensagens de erro expostas ao usuário para melhorar a segurança da aplicação.

@@ -4,7 +4,7 @@ assertion_line: 82
 expression: new_asset
 ---
 {
-  "id": 1,
-  "name": "Bitcoin",
+  "id": 11,
+  "name": "Dogecoin",
   "unit_value": 10.0
 }

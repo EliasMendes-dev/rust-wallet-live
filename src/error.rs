@@ -1,4 +1,4 @@
-use axum::{http::StatusCode, response::IntoResponse, Json};
+use axum::{Json, http::StatusCode, response::IntoResponse};
 use serde::Serialize;
 use thiserror::Error;
 
@@ -16,8 +16,14 @@ pub enum AppError {
     #[error("User Does Not Exist")]
     UserDoesNotExist,
 
-    #[error("This username is already registered")]
-    UsernameTaken,
+    #[error("This email is already registered")]
+    EmailTaken,
+
+    #[error("The provided email is not valid")]
+    InvalidEmailFormat,
+
+    #[error("The provided username is not valid")]
+    InvalidName,
 
     #[error(transparent)]
     Database(#[from] sqlx::Error),
@@ -31,24 +37,41 @@ pub enum AppError {
 
 #[derive(Serialize)]
 pub struct ErrorResponse {
-    error: String, // fazer match aqui
+    error: String,
+}
+
+impl AppError {
+    fn status_code(&self) -> StatusCode {
+        match self {
+            Self::MissingAuthorization => StatusCode::UNAUTHORIZED,
+            Self::InvalidCredentials => StatusCode::UNAUTHORIZED,
+            Self::EmailTaken | Self::InvalidEmailFormat | Self::InvalidName => {
+                StatusCode::BAD_REQUEST
+            }
+            Self::AssetDoesNotExist | Self::UserDoesNotExist => StatusCode::NOT_FOUND,
+            Self::Database(_) | Self::Template(_) | Self::Session(_) => {
+                StatusCode::INTERNAL_SERVER_ERROR
+            }
+        }
+    }
+
+    fn user_facing_message(&self) -> String {
+        match self {
+            Self::Database(_) | Self::Template(_) | Self::Session(_) => {
+                "Internal server error".to_string()
+            }
+            Self::MissingAuthorization => "Unauthorized".to_string(),
+            _ => self.to_string(),
+        }
+    }
 }
 
 impl IntoResponse for AppError {
     fn into_response(self) -> axum::response::Response {
         let error_response = ErrorResponse {
-            error: self.to_string(),
+            error: self.user_facing_message(),
         };
 
-        let status = match self {
-            Self::UsernameTaken | Self::MissingAuthorization => StatusCode::BAD_REQUEST,
-            Self::InvalidCredentials => StatusCode::UNAUTHORIZED,
-            Self::AssetDoesNotExist | Self::UserDoesNotExist => StatusCode::NOT_FOUND,
-            Self::Database(_) | Self::Template(_) | Self::Session(_) => {
-                StatusCode::INTERNAL_SERVER_ERROR
-            }
-        };
-
-        (status, Json(error_response)).into_response()
+        (self.status_code(), Json(error_response)).into_response()
     }
 }

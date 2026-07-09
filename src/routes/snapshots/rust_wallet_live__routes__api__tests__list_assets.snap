@@ -1,12 +1,57 @@
 ---
 source: src/routes/api.rs
-assertion_line: 92
+assertion_line: 96
 expression: assets
 ---
 [
   {
+    "id": 8,
+    "name": "Banco do Brasil",
+    "unit_value": 29.8
+  },
+  {
     "id": 1,
     "name": "Bitcoin",
-    "unit_value": 10.0
+    "unit_value": 95
+  },
+  {
+    "id": 4,
+    "name": "Cardano",
+    "unit_value": 24.75
+  },
+  {
+    "id": 2,
+    "name": "Ethereum",
+    "unit_value": 82.5
+  },
+  {
+    "id": 9,
+    "name": "Nubank",
+    "unit_value": 27.5
+  },
+  {
+    "id": 6,
+    "name": "Petrobras",
+    "unit_value": 36.4
+  },
+  {
+    "id": 3,
+    "name": "Solana",
+    "unit_value": 68.9
+  },
+  {
+    "id": 10,
+    "name": "Tesla",
+    "unit_value": 99.9
+  },
+  {
+    "id": 7,
+    "name": "Vale",
+    "unit_value": 58.9
+  },
+  {
+    "id": 5,
+    "name": "XRP",
+    "unit_value": 12.9
   }
 ]

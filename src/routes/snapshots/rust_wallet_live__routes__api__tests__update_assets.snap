@@ -5,6 +5,6 @@ expression: update_asset
 ---
 {
   "id": 1,
-  "name": "Ethereum",
+  "name": "Avalanche",
   "unit_value": 20.0
 }

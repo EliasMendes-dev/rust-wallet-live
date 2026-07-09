@@ -1,6 +1,7 @@
 use std::convert::Infallible;
 
 use axum::extract::FromRequestParts;
+use rust_decimal::Decimal;
 use sqlx::PgPool;
 
 use crate::{
@@ -16,7 +17,7 @@ impl Repository {
     pub async fn list_assets(&self) -> sqlx::Result<Vec<Asset>> {
         sqlx::query_as!(
             Asset,
-            "SELECT id, name, unit_value
+            "SELECT id, name, unit_value::numeric AS \"unit_value!\"
             FROM assets
             ORDER BY name ASC;"
         )
@@ -24,12 +25,12 @@ impl Repository {
         .await
     }
 
-    pub async fn create_asset(&self, name: String, unit_value: f64) -> sqlx::Result<Asset> {
+    pub async fn create_asset(&self, name: String, unit_value: Decimal) -> sqlx::Result<Asset> {
         sqlx::query_as!(
             Asset,
             "INSERT INTO assets (name, unit_value)
-            VALUES ($1, $2)
-            RETURNING id, name, unit_value;",
+            VALUES ($1, $2::numeric)
+            RETURNING id, name, unit_value::numeric AS \"unit_value!\";",
             name,
             unit_value
         )
@@ -41,15 +42,15 @@ impl Repository {
         &self,
         id: i64,
         name: Option<String>,
-        unit_value: Option<f64>,
+        unit_value: Option<Decimal>,
     ) -> sqlx::Result<Option<Asset>> {
         sqlx::query_as!(
             Asset,
             "UPDATE assets
             SET name = COALESCE($2, name),
-                unit_value = COALESCE($3::float8, unit_value)
+                unit_value = COALESCE($3::numeric, unit_value)
             WHERE id = $1
-            RETURNING id, name, unit_value;",
+            RETURNING id, name, unit_value::numeric AS \"unit_value!\";",
             id,
             name,
             unit_value
@@ -58,27 +59,31 @@ impl Repository {
         .await
     }
 
-    pub async fn add_user(&self, username: &str, password_hash: &str) -> sqlx::Result<UserRecord> {
-        sqlx::query_as!(
-            UserRecord,
-            "INSERT INTO users (username, password_hash)
-            VALUES ($1, $2)
-            RETURNING id, username, password_hash;",
-            username,
-            password_hash
+    pub async fn add_user(
+        &self,
+        username: &str,
+        email: &str,
+        password_hash: &str,
+    ) -> sqlx::Result<UserRecord> {
+        sqlx::query_as::<_, UserRecord>(
+            "INSERT INTO users (username, email, password_hash)
+            VALUES ($1, $2, $3)
+            RETURNING id, username, email, password_hash;",
         )
+        .bind(username)
+        .bind(email)
+        .bind(password_hash)
         .fetch_one(&self.db)
         .await
     }
 
-    pub async fn get_user_by_name(&self, username: &str) -> sqlx::Result<Option<UserRecord>> {
-        sqlx::query_as!(
-            UserRecord,
-            "SELECT id, username, password_hash
+    pub async fn get_user_by_email(&self, email: &str) -> sqlx::Result<Option<UserRecord>> {
+        sqlx::query_as::<_, UserRecord>(
+            "SELECT id, username, email, password_hash
             FROM users
-            WHERE username = $1;",
-            username
+            WHERE email = $1;",
         )
+        .bind(email)
         .fetch_optional(&self.db)
         .await
     }
@@ -90,15 +95,15 @@ impl Repository {
             SELECT
             a.id,
             a.name,
-            a.unit_value,
-            SUM((a.unit_value - o.bought_for) * o.quantity_owned) AS "value_delta!",
-            SUM(o.quantity_owned) AS "quantity_owned!",
+            a.unit_value::numeric AS "unit_value!",
+            SUM((a.unit_value::numeric - o.bought_for::numeric) * o.quantity_owned::numeric) AS "value_delta!",
+            SUM(o.quantity_owned::numeric) AS "quantity_owned!",
             JSON_AGG(
               JSON_BUILD_OBJECT(
               'bought_at', o.timestamp,
-              'bought_for', o.bought_for,
-              'quantity_bought', o.quantity_owned,
-              'value_delta', (a.unit_value - o.bought_for) * o.quantity_owned
+              'bought_for', o.bought_for::numeric,
+              'quantity_bought', o.quantity_owned::numeric,
+              'value_delta', (a.unit_value::numeric - o.bought_for::numeric) * o.quantity_owned::numeric
               )
               ORDER BY o.timestamp ASC
             ) AS "purchase_history!: _"
@@ -118,13 +123,13 @@ impl Repository {
         &self,
         user_id: i64,
         asset_id: i64,
-        quantity: f64,
-        unit_value: f64,
+        quantity: Decimal,
+        unit_value: Decimal,
     ) -> sqlx::Result<()> {
         sqlx::query!(
             "INSERT INTO owned_assets
             (user_id, asset_id, quantity_owned, bought_for)
-            VALUES ($1, $2, $3, $4)",
+            VALUES ($1, $2, $3::numeric, $4::numeric)",
             user_id,
             asset_id,
             quantity,
