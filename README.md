@@ -4,6 +4,18 @@
 
 Este projeto é uma aplicação de carteira financeira simples construída em Rust. Ele permite que o usuário se registre, faça login e visualize ativos disponíveis e ativos próprios. A autenticação é baseada em sessão no servidor, e os dados transacionais usam `decimal` para preservar precisão financeira.
 
+## Demonstração
+
+Abaixo estão dois exemplos do fluxo da aplicação:
+
+- Fluxo de login, cadastro e autenticação bem-sucedida:
+
+  ![Fluxo de login e cadastro](assets/login_e_cadastro_veloz.gif)
+
+- Adição de ativos com compra de valor menor e maior:
+
+  ![Adicionando ativos](assets/assets_veloz.gif)
+
 ## Como executar a aplicação
 
 1. Crie um arquivo `.env` com a variável `DATABASE_URL` apontando para o banco PostgreSQL:
